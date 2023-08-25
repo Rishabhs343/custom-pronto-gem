@@ -8,8 +8,8 @@ Gem::Specification.new do |s|
   s.name = 'pronto-rubycritic'
   s.version = Pronto::RubyCriticVersion::VERSION
   s.platform = Gem::Platform::RUBY
-  s.author = 'Test'
-  s.email = 'test@gmail.com'
+  s.author = 'Rishabh Singh'
+  s.email = 'rishabhs343@gmail.com'
   s.summary = 'Pronto runner for rubycritic'
 
   s.licenses = ['MIT']
