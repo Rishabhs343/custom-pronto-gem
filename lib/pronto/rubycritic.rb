@@ -8,24 +8,22 @@ require 'rubycritic/core/analysed_modules_collection'
 
 module Pronto
   class RubyCritic < Runner
-
     def run
       return [] unless files.any?
 
-      output = analyze(files.first(20))
+      output = analyze(files)
       create_pronto_messages(output)
     end
 
+    private
+
     def analyze(files)
-      begin
-        ::RubyCritic::Config.source_control_system = ::RubyCritic::SourceControlSystem::Base.create
-        ::RubyCritic::Config.set({paths: files})
-        application = ::RubyCritic::AnalysersRunner.new(files)
-        application.run
-      rescue
-        puts "An error occurred during analysis"
-        []
-      end
+      ::RubyCritic::Config.source_control_system = ::RubyCritic::SourceControlSystem::Base.create
+      ::RubyCritic::Config.set({ paths: files })
+      ::RubyCritic::AnalysersRunner.new(files).run
+    rescue StandardError => e
+      Rails.logger.error "An error occurred during analysis: #{e.message}"
+      []
     end
 
     def files
@@ -33,44 +31,41 @@ module Pronto
     end
 
     def create_pronto_messages(output)
-      messages = []
+      output.flat_map { |mod| create_messages_for_module(mod) }
+    end
 
-      output.each do |mod|
-        mod.smells.each do |smell|
-          patch = patch_for_smell(smell) rescue nil
-          next if patch.nil?
+    def create_messages_for_module(mod)
+      mod.smells.flat_map { |smell| create_messages_for_smell(smell, mod) }
+    end
 
-          smell_lines = smell.locations.map { |location| location.line }
-          line = patch.added_lines.find do |added_line|
-            smell_lines.find { |error_line| error_line == added_line.new_lineno }
-          end rescue nil
-          next if line.nil?
+    def create_messages_for_smell(smell, mod)
+      patch = patch_for_smell(smell)
+      smell_lines = smell.locations.map(&:line)
 
-          locations = smell.locations.map { |loc| "#{loc.pathname}:#{loc.line}" }.join(', ')
-          context = smell.context
-          message = smell.message
-          smell_type = smell.type
-
-          full_message = "Smell detected in #{context} (#{smell_type}) at #{locations}: #{message}"
-          message = ::Pronto::Message.new(
+      patch.added_lines.map do |added_line|
+        if smell_lines.include?(added_line.new_lineno)
+          full_message = build_full_message(smell)
+          ::Pronto::Message.new(
             mod.path,
-            line,
+            added_line,
             :info,
             full_message,
             nil,
             self.class
           )
-
-          messages << message
         end
-      end
-      messages
+      end.compact
     end
 
     def patch_for_smell(smell)
       ruby_patches.find do |patch|
         patch.new_file_full_path.relative_path_from(Pathname.pwd).to_s == smell.locations.map { |location| location.pathname.relative_path_from(Pathname.pwd).to_s }.uniq.first
       end
+    end
+
+    def build_full_message(smell)
+      locations = smell.locations.map { |loc| "#{loc.pathname}:#{loc.line}" }.join(', ')
+      "Smell detected in #{smell.context} (#{smell.type}) at #{locations}: #{smell.message}"
     end
   end
 end
