@@ -1,0 +1,65 @@
+# Example configuration for pronto-rubycritic.
+# Copy to your repo root as .rubycritic-pronto.yml and adjust thresholds.
+#
+# ──────────────────────────────────────────────────────────────────────────────
+# reek  — detects code smells (long methods, feature envy, bad naming, etc.).
+#         Each smell is a potential design issue attached to a specific location.
+#   smell_types: allow-list of reek smell types (see list below).
+#                Only reek smells are filtered — flay/flog smells pass through.
+#   max_smells:  cap total reported smells per module (across all analysers).
+#
+# flay  — structural code duplication. Score is duplication mass; higher = more.
+#   max_score: drop flay smells above this score.
+#   exclude:   repo-relative globs to skip for flay.
+#
+# flog  — method complexity score. Higher = more complex.
+#   max_score: drop flog smells above this score.
+#   exclude:   repo-relative globs to skip for flog.
+#
+# complexity — cyclomatic complexity (per module).
+#   max: drop modules above this complexity.
+#
+# churn — how often the file changes in git history.
+#   max: drop modules with churn above this.
+#
+# ──────────────────────────────────────────────────────────────────────────────
+# Reek smell types you can list under reek.smell_types:
+#   Attribute, BooleanParameter, ClassVariable, ControlParameter, DataClump,
+#   DuplicateMethodCall, FeatureEnvy, InstanceVariableAssumption,
+#   IrresponsibleModule, LongParameterList, LongYieldList, ManualDispatch,
+#   MissingSafeMethod, ModuleInitialize, NestedIterators, NilCheck,
+#   RepeatedConditional, SelfAssignment, SingletonMethodCall, TooManyConstants,
+#   TooManyInstanceVariables, TooManyMethods, UncommunicativeMethodName,
+#   UncommunicativeModuleName, UncommunicativeParameterName,
+#   UncommunicativeVariableName, UnusedParameters, UnusedPrivateMethod,
+#   UtilityFunction
+#
+# NOTE (0.12.0): reek.min_severity was REMOVED — RubyCritic smells do not
+# expose a severity field, so the key was always a no-op that silently
+# dropped every smell. Use reek.smell_types or flay/flog.max_score instead.
+
+reek:
+  smell_types:
+    - UncommunicativeMethodName
+    - UncommunicativeVariableName
+    - DuplicateMethodCall
+    - FeatureEnvy
+  max_smells: 5
+
+flay:
+  max_score: 100
+  exclude:
+    - 'spec/**/*'
+    - 'test/**/*'
+
+flog:
+  max_score: 20
+  exclude:
+    - 'spec/**/*'
+    - 'test/**/*'
+
+complexity:
+  max: 10
+
+churn:
+  max: 5

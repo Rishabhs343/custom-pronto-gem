@@ -1,0 +1,11 @@
+/coverage/
+/tmp/
+/.bundle/
+/pkg/
+/vendor/bundle/
+*.gem
+Gemfile.lock
+.rspec_status
+.rubycritic/
+.byebug_history
+.DS_Store

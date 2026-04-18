@@ -1,0 +1,86 @@
+stages:
+  - install
+  - lint
+  - test
+  - analysis
+  - build
+
+variables:
+  BUNDLE_PATH: vendor/bundle
+  BUNDLE_JOBS: '4'
+  BUNDLE_RETRY: '3'
+
+default:
+  image: ruby:3.3
+  cache:
+    key:
+      files:
+        - pronto-rubycritic.gemspec
+    paths:
+      - vendor/bundle
+  before_script:
+    - ruby -v
+    - gem install bundler --no-document
+    - bundle install
+
+install:
+  stage: install
+  script:
+    - bundle check || bundle install
+  artifacts:
+    paths:
+      - vendor/bundle
+    expire_in: 1 hour
+
+rubocop:
+  stage: lint
+  script:
+    - bundle exec rubocop --parallel --format progress --format json --out rubocop.json
+  artifacts:
+    when: always
+    paths:
+      - rubocop.json
+    expire_in: 1 week
+
+reek:
+  stage: lint
+  script:
+    - bundle exec reek lib/
+
+rspec:
+  stage: test
+  parallel:
+    matrix:
+      - RUBY_VERSION: ['3.2', '3.3', '3.4']
+  image: ruby:${RUBY_VERSION}
+  script:
+    - COVERAGE=1 bundle exec rake spec
+  coverage: '/LOC \(\d+\.\d+%\)/'
+  artifacts:
+    when: always
+    paths:
+      - coverage/
+      - tmp/.rspec_status
+    expire_in: 1 week
+
+rubycritic:
+  stage: analysis
+  script:
+    - bundle exec rubycritic lib --no-browser --minimum-score 75 --format json
+  artifacts:
+    when: always
+    paths:
+      - tmp/rubycritic/
+    expire_in: 1 week
+
+gem-build:
+  stage: build
+  script:
+    - gem build pronto-rubycritic.gemspec
+  artifacts:
+    paths:
+      - '*.gem'
+    expire_in: 1 month
+  only:
+    - main
+    - tags

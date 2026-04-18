@@ -1,0 +1,92 @@
+require:
+  - rubocop-rspec
+  - rubocop-performance
+
+AllCops:
+  NewCops: enable
+  SuggestExtensions: false
+  TargetRubyVersion: 3.2
+  Exclude:
+    - 'vendor/**/*'
+    - 'tmp/**/*'
+    - 'coverage/**/*'
+    - 'pkg/**/*'
+    - '.rubycritic/**/*'
+
+Layout/LineLength:
+  Max: 120
+
+Metrics/MethodLength:
+  Max: 20
+  Exclude:
+    - 'spec/**/*'
+
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'
+    - 'pronto-rubycritic.gemspec'
+    - 'Rakefile'
+
+Metrics/AbcSize:
+  Max: 25
+
+Metrics/ClassLength:
+  Max: 200
+
+Metrics/ParameterLists:
+  # Keyword args are self-documenting at the call site; we don't count them
+  # toward the positional-arg limit of 5.
+  CountKeywordArgs: false
+  Exclude:
+    - 'spec/**/*'
+
+Style/Documentation:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
+  EnforcedStyle: always
+
+Style/StringLiterals:
+  EnforcedStyle: single_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: single_quotes
+
+Naming/AccessorMethodName:
+  Enabled: false
+
+RSpec/MultipleExpectations:
+  Max: 5
+
+RSpec/ExampleLength:
+  Max: 20
+
+RSpec/NestedGroups:
+  Max: 4
+
+RSpec/VerifiedDoubles:
+  Enabled: false
+
+RSpec/MessageSpies:
+  Enabled: false
+
+RSpec/ReceiveMessages:
+  Enabled: false
+
+# Integration specs legitimately use string descriptions (they test
+# end-to-end flows, not a single class).
+RSpec/DescribeClass:
+  Enabled: false
+
+# Our spec path is spec/pronto/rubycritic_spec.rb, matching the lib path
+# lib/pronto/rubycritic.rb. Rubocop-rspec's default format expects
+# snake-cased "ruby_critic", which contradicts the actual constant name.
+RSpec/SpecFilePathFormat:
+  Enabled: false
+
+# We need to stub Pronto::Runner#ruby_patches (an inherited method) on the
+# runner under test to drive the happy path. This is an intentional pattern
+# for testing subclasses of framework base classes.
+RSpec/SubjectStub:
+  Enabled: false
